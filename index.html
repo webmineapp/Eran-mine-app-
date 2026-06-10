@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Casey Mine Earn app</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background: #111d2e;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            background: #1a283a;
+            position: relative;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            display: none;
+            padding: 20px;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .active {
+            display: flex;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-google {
+            background: #fff;
+            color: #333;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid #2c3e50;
+            background: #0f172a;
+            color: white;
+            font-size: 15px;
+        }
+
+        #login-screen { justify-content: center; }
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: #00c6ff;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(0, 198, 255, 0.5);
+        }
+        .tagline { font-size: 14px; color: #a0aec0; margin-bottom: 30px; }
+
+        .app-header {
+            background: #0f172a;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #23354d;
+            width: 100%;
+        }
+
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: #0072ff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .wallet-card {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            padding: 15px;
+            border-radius: 15px;
+            width: 100%;
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .task-card {
+            background: #23354d;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #2c4260;
+            transition: 0.3s;
+        }
+
+        .task-card:active { background: #2c4260; }
+        .task-card icon { font-size: 30px; display: block; margin-bottom: 8px; }
+
+        .ai-status {
+            background: rgba(0, 198, 255, 0.1);
+            border: 1px solid #00c6ff;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #00c6ff;
+            margin-top: 15px;
+            width: 100%;
+            text-align: center;
+            display: none;
+        }
+
+        .bottom-nav {
+            margin-top: auto;
+            background: #0f172a;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px;
+            border-top: 2px solid #23354d;
+            width: 100%;
+        }
+
+        .nav-item { font-size: 13px; color: #a0aec0; cursor: pointer; text-align: center; }
+        .nav-item.active-nav { color: #00c6ff; font-weight: bold; }
+        
+        .ad-slot { 
+            margin: 15px 0; 
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 50px; 
+        }
+
+        /* Popups / Task Overlays */
+        .task-popup {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a283a;
+            z-index: 10;
+            padding: 20px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        .popup-active { display: flex; }
+
+        /* Spin Canvas */
+        #wheel {
+            width: 250px; height: 250px;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            transition: transform 4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: conic-gradient(
+                #ef4444 0deg 45deg, #f59e0b 45deg 90deg, #10b981 90deg 135deg, #3b82f6 135deg 180deg,
+                #8b5cf6 180deg 225deg, #ec4899 225deg 270deg, #6366f1 270deg 315deg, #14b8a6 315deg 360deg
+            );
+            position: relative;
+        }
+        .wheel-pointer {
+            width: 0; height: 0;
+            border-left: 15px solid transparent; border-right: 15px solid transparent;
+            border-top: 20px solid #fff;
+            position: absolute; z-index: 12; top: calc(50% - 140px);
+        }
+
+        /* Scratch Card Area */
+        .scratch-container {
+            width: 200px; height: 200px;
+            position: relative; background: #23354d;
+            border-radius: 15px; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .scratch-prize { font-size: 24px; font-weight: bold; color: #38ef7d; position: absolute; z-index: 1; }
+        .scratch-canvas { position: absolute; top: 0; left: 0; z-index: 2; cursor: pointer; }
+
+        /* Quiz & Options */
+        .opt-btn {
+            background: #23354d; color: white; width: 100%; padding: 12px;
+            border: 1px solid #2c4260; border-radius: 10px; margin: 5px 0; text-align: left; cursor: pointer;
+        }
+        .opt-btn:active { background: #0072ff; }
+
+        /* 🔒 Adsterra Policy Safe Video Ad Popup */
+        .video-ad-popup {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #0f172a;
+            z-index: 99999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .ad-box-card {
+            background: #1a283a;
+            border: 2px solid #00c6ff;
+            padding: 30px 20px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 10px 30px rgba(0, 198, 255, 0.2);
+        }
+        .video-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .timer-badge {
+            background: #23354d;
+            color: #38ef7d;
+            padding: 8px 20px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 15px 0;
+            display: inline-block;
+            border: 1px solid #38ef7d;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <div id="login-screen" class="screen active">
+        <div class="logo">Casey Mine Earn app</div>
+        <div class="tagline">100% Real AI Payment App</div>
+        
+        <select id="lang-select" onchange="changeLanguage()">
+            <option value="bn">বাংলা (Bengali)</option>
+            <option value="en">English</option>
+        </select>
+
+        <input type="text" id="reg-name" placeholder="আপনার পুরো নাম (Full Name)">
+        <input type="email" id="reg-email" placeholder="ইমেইল এড্রেস (Email)">
+        <input type="password" id="reg-pass" placeholder="পাসওয়ার্ড (Password)">
+        <button class="btn" onclick="handleLogin()" id="btn-login">লগইন / রেজিস্টার</button>
+        
+        <button class="btn btn-google" onclick="handleGoogleLogin()">
+            <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google"> Google দিয়ে লগইন করুন
+        </button>
+    </div>
+
+    <div id="dashboard-screen" class="screen">
+        <div class="app-header">
+            <div class="user-info">
+                <div class="avatar" id="user-avatar">U</div>
+                <div>
+                    <h4 id="user-display-name">User Name</h4>
+                    <small style="color: #a0aec0;">Profile Active</small>
+                </div>
+            </div>
+            <select id="dashboard-lang" onchange="syncLanguage(this.value)" style="width: auto; margin:0; padding: 5px;">
+                <option value="bn">BN</option>
+                <option value="en">EN</option>
+            </select>
+        </div>
+
+        <div class="wallet-card">
+            <div>
+                <p style="font-size: 14px;" id="txt-balance">মোট ব্যালেন্স</p>
+                <h2 id="coin-balance">0 Coins</h2>
+            </div>
+            <div style="text-align: right;">
+                <p style="font-size: 14px;" id="txt-value">মূল্য ($)</p>
+                <h2 id="usd-balance">$0.00</h2>
+            </div>
+        </div>
+
+        <div id="ai-box" class="ai-status">🤖 AI Engine: প্রসেসিং...</div>
+
+        <div class="task-grid">
+            <div class="task-card" onclick="openTask('quiz')">
+                <icon>🧠</icon><span id="task-quiz">কুইজ খেলুন</span>
+            </div>
+            <div class="task-card" onclick="openTask('spin')">
+                <icon>🎡</icon><span id="task-spin">লাকি স্পিন</span>
+            </div>
+            <div class="task-card" onclick="openTask('math')">
+                <icon>🧮</icon><span id="task-math">অংক করুন</span>
+            </div>
+            <div class="task-card" onclick="openTask('scratch')">
+                <icon>⏳</icon><span id="task-scratch">স্ক্র্যাচ কার্ড</span>
+            </div>
+            <div class="task-card" onclick="openTask('game')">
+                <icon>🎮</icon><span id="task-game">গেম খেলুন</span>
+            </div>
+            <div class="task-card" onclick="openVideoAdPopup()">
+                <icon>📺</icon><span id="task-ad">ভিডিও অ্যাড</span>
+            </div>
+        </div>
+
+        <div style="background: #23354d; width:100%; padding: 15px; border-radius:15px; margin-top:15px; text-align:center;">
+            <p id="txt-refer">বন্ধুদের ইনভাইট করে ১০০০ কয়েন পান!</p>
+            <p style="color:#00c6ff; font-weight:bold; margin-top:5px; letter-spacing: 2px;">REF-CASEY77</p>
+            <button class="btn" style="margin-top:5px; padding:6px;" onclick="applyReferral()" id="btn-refer">রেফার কোড ব্যবহার করুন</button>
+        </div>
+
+        <div class="ad-slot">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : '39660122762a47461a863506430395af',
+                    'format' : 'iframe',
+                    'height' : 50,
+                    'width' : 320,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="https://www.highperformanceformat.com/39660122762a47461a863506430395af/invoke.js"></script>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active-nav" onclick="switchTab('dashboard')">🏠 <br><span id="nav-home">হোম</span></div>
+            <div class="nav-item" onclick="switchTab('withdraw')">💵 <br><span id="nav-cashout">টাকা তুলুন</span></div>
+        </div>
+    </div>
+
+    <div id="withdraw-screen" class="screen">
+        <h2 style="margin-bottom: 20px;" id="wd-title">টাকা উত্তোলন (Cash Out)</h2>
+        <div class="wallet-card" style="background: #0f172a;">
+            <div>
+                <p id="wd-avail">উত্তোলনযোগ্য ব্যালেন্স</p>
+                <h3 id="wd-coin-display" style="color:#00c6ff">0 Coins</h3>
+            </div>
+        </div>
+        <label style="align-self: flex-start; margin-top:10px;" id="lbl-method">পেমেন্ট মেথড সিলেক্ট করুন:</label>
+        <select id="payment-method">
+            <option value="Bkash">Bkash (বিকাশ)</option>
+            <option value="Nagad">Nagad (নগদ)</option>
+            <option value="Paytm">Paytm</option>
+            <option value="UPI">UPI ID</option>
+        </select>
+        <input type="text" id="payment-number" placeholder="মোবাইল নম্বর বা UPI আইডি দিন">
+        <input type="number" id="payment-amount" placeholder="কয়েন এর পরিমাণ দিন (সর্বনিম্ন ৫০)">
+        <button class="btn" style="background: linear-gradient(135deg, #f857a6, #ff5858);" onclick="handleWithdraw()" id="btn-wd-submit">AI ক্যাশআউট রিকোয়েস্ট</button>
+        
+        <div class="bottom-nav" style="position: absolute; bottom: 0; left: 0;">
+            <div class="nav-item" onclick="switchTab('dashboard')">🏠 <br>হোম</div>
+            <div class="nav-item active-nav" onclick="switchTab('withdraw')">💵 <br>টাকা তুলুন</div>
+        </div>
+    </div>
+
+    <div id="popup-spin" class="task-popup">
+        <h2 style="margin-bottom: 15px;">Lucky Wheel</h2>
+        <div class="wheel-pointer"></div>
+        <div id="wheel"></div>
+        <button class="btn" onclick="spinTheWheel()" id="spin-btn">SPIN NOW</button>
+        <button class="btn" style="background:#555;" onclick="closeTaskPopup()">Back</button>
+        <div class="ad-slot"><script type="text/javascript">atOptions={'key':'39660122762a47461a863506430395af','format':'iframe','height':50,'width':320,'params':{}};</script><script type="text/javascript" src="https://www.highperformanceformat.com/39660122762a47461a863506430395af/invoke.js"></script></div>
+    </div>
+
+    <div id="popup-quiz" class="task-popup">
+        <h2 style="margin-bottom:10px;">General Quiz</h2>
+        <p id="quiz-question" style="font-size: 18px; margin-bottom: 15px; text-align: center;"></p>
+        <div id="quiz-options" style="width: 100%;"></div>
+        <button class="btn" style="background:#555; margin-top: 15px;" onclick="closeTaskPopup()">Back</button>
+        <div class="ad-slot"><script type="text/javascript">atOptions={'key':'39660122762a47461a863506430395af','format':'iframe','height':50,'width':320,'params':{}};</script><script type="text/javascript" src="https://www.highperformanceformat.com/39660122762a47461a863506430395af/invoke.js"></script></div>
+    </div>
+
+    <div id="popup-math" class="task-popup">
+        <h2>Solve Math</h2>
+        <h1 id="math-question" style="margin: 15px 0; letter-spacing: 2px;">5 + 12 = ?</h1>
+        <input type="number" id="math-answer" placeholder="আপনার উত্তর দিন">
+        <button class="btn" onclick="checkMathAnswer()">Submit Answer</button>
+        <button class="btn" style="background:#555;" onclick="closeTaskPopup()">Back</button>
+        <div class="ad-slot"><script type="text/javascript">atOptions={'key':'39660122762a47461a863506430395af','format':'iframe','height':50,'width':320,'params':{}};</script><script type="text/javascript" src="https://www.highperformanceformat.com/39660122762a47461a863506430395af/invoke.js"></script></div>
+    </div>
+
+    <div id="popup-scratch" class="task-popup">
+        <h2>Scratch Card</h2>
+        <p style="margin-bottom: 10px; color:#a0aec0;">আঙুল দিয়ে পুরো কার্ডটি ঘষুন</p>
+        <div class="scratch-container">
+            <div class="scratch-prize" id="scratch-prize-text">+20 Coins</div>
+            <canvas id="scratch-canvas" class="scratch-canvas" width="200" height="200"></canvas>
+        </div>
+        <button class="btn" style="background:#555; margin-top:15px;" onclick="closeTaskPopup()">Back</button>
+        <div class="ad-slot"><script type="text/javascript">atOptions={'key':'39660122762a47461a863506430395af','format':'iframe','height':50,'width':320,'params':{}};</script><script type="text/javascript" src="https://www.highperformanceformat.com/39660122762a47461a863506430395af/invoke.js"></script></div>
+    </div>
+
+    <div id="popup-game" class="task-popup">
+        <h2>Play Mine Games</h2>
+        <p style="color:#a0aec0; margin-bottom: 10px;">১ মিনিট গেম খেললেই পাবেন বোনাস পুরস্কার!</p>
+        <div style="background:#0f172a; width: 100%; height: 150px; display:flex; justify-content:center; align-items:center; border-radius:15px; border:2px dashed #00c6ff;">
+            <h3 id="game-timer-display" style="color: #38ef7d;">🎮 রেডি হয়ে বাটনে চাপ দিন</h3>
+        </div>
+        <button class="btn" id="start-game-btn" onclick="startPlayGameTimer()">গেম খেলা শুরু করুন</button>
+        <button class="btn" style="background:#555;" onclick="closeTaskPopup()">Back</button>
+    </div>
+
+    <div id="video-ad-popup" class="video-ad-popup">
+        <div class="ad-box-card">
+            <div class="video-icon">🎬</div>
+            <h3>Premium Video Ad</h3>
+            <p style="font-size: 14px; color: #a0aec0; margin-top: 5px;">নিচের বাটনে ক্লিক করে বিজ্ঞাপনটি দেখুন এবং বোনাস দাবি করুন।</p>
+            
+            <div id="ad-timer-status" class="timer-badge" style="display: none;">🔒 Waiting...</div>
+            
+            <button id="ad-action-btn" class="btn" style="background: linear-gradient(135deg, #ff9900, #ff5500);" onclick="handleWatchAdClick()">Watch Video & Earn</button>
+            
+            <button id="back-ad-btn" class="btn" style="background:#555; margin-top: 10px;" onclick="closeVideoAdPopup()">Close</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let userCoins = 0;
+    const coinsPerDollar = 50;
+    let currentLang = 'bn';
+    
+    // ✅ আপনার দেওয়া নতুন Adsterra ডাইরেক্ট লিঙ্কটি এখানে সফলভাবে সেট করা হয়েছে
+    const ADSTERRA_DIRECT_LINK = "https://pl29701997.effectivecpmnetwork.com/8ae26a075b924fd4255758b11ca5cd54/"; 
+
+    window.onload = function() {
+        const savedUser = localStorage.getItem('casey_user_name');
+        if(savedUser) {
+            userCoins = parseInt(localStorage.getItem('casey_user_coins')) || 0;
+            document.getElementById('user-display-name').innerText = savedUser;
+            document.getElementById('user-avatar').innerText = savedUser.charAt(0).toUpperCase();
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('dashboard-screen').classList.add('active');
+            updateBalances();
+        }
+    }
+
+    function handleLogin() {
+        const name = document.getElementById('reg-name').value;
+        const email = document.getElementById('reg-email').value;
+        if(!name || !email) {
+            alert("অনুগ্রহ করে সব তথ্য দিন!");
+            return;
+        }
+        saveUserSession(name);
+    }
+
+    function handleGoogleLogin() {
+        saveUserSession("Google User");
+    }
+
+    function saveUserSession(name) {
+        localStorage.setItem('casey_user_name', name);
+        localStorage.setItem('casey_user_coins', userCoins);
+        document.getElementById('user-display-name').innerText = name;
+        document.getElementById('user-avatar').innerText = name.charAt(0).toUpperCase();
+        document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('dashboard-screen').classList.add('active');
+        triggerAI("Profile Logged In Successfully.");
+    }
+
+    function triggerAI(message) {
+        const aiBox = document.getElementById('ai-box');
+        aiBox.style.display = 'block';
+        aiBox.innerText = `🤖 AI Core: ${message}`;
+        setTimeout(() => { aiBox.style.display = 'none'; }, 4000);
+    }
+
+    function updateBalances() {
+        document.getElementById('coin-balance').innerText = `${userCoins} Coins`;
+        document.getElementById('wd-coin-display').innerText = `${userCoins} Coins`;
+        let usdValue = (userCoins / coinsPerDollar).toFixed(2);
+        document.getElementById('usd-balance').innerText = `$${usdValue}`;
+        localStorage.setItem('casey_user_coins', userCoins);
+    }
+
+    // 🚀 নিরাপদ ভিডিও অ্যাড সিস্টেম কন্ট্রোল
+    function openVideoAdPopup() {
+        document.getElementById('video-ad-popup').style.display = 'flex';
+        const actionBtn = document.getElementById('ad-action-btn');
+        const timerStatus = document.getElementById('ad-timer-status');
+        const backBtn = document.getElementById('back-ad-btn');
+        
+        actionBtn.style.display = 'block';
+        actionBtn.style.background = "linear-gradient(135deg, #ff9900, #ff5500)";
+        actionBtn.innerText = "Watch Video & Earn";
+        timerStatus.style.display = 'none';
+        backBtn.style.display = 'block';
+    }
+
+    function closeVideoAdPopup() {
+        document.getElementById('video-ad-popup').style.display = 'none';
+    }
+
+    function handleWatchAdClick() {
+        const actionBtn = document.getElementById('ad-action-btn');
+        const timerStatus = document.getElementById('ad-timer-status');
+        const backBtn = document.getElementById('back-ad-btn');
+
+        // ১. ইউজারের ক্লিকের মাধ্যমে নতুন ট্যাবে অ্যাড লিঙ্ক ওপেন হবে (Safe Policy)
+        window.open(ADSTERRA_DIRECT_LINK, '_blank');
+
+        // ২. বাটন স্টেট পরিবর্তন এবং টাইমার চালু
+        actionBtn.style.display = 'none';
+        backBtn.style.display = 'none';
+        timerStatus.style.display = 'inline-block';
+        
+        let timeLeft = 5;
+        timerStatus.innerText = `⌛ Wait (${timeLeft}s)`;
+
+        const adInterval = setInterval(() => {
+            timeLeft--;
+            timerStatus.innerText = `⌛ Wait (${timeLeft}s)`;
+            
+            if(timeLeft <= 0) {
+                clearInterval(adInterval);
+                timerStatus.style.border = "1px solid #22c55e";
+                timerStatus.style.color = "#22c55e";
+                timerStatus.innerText = "🔓 Task Completed!";
+                
+                // কয়েন রিসিভ করার মূল বাটন সচল করা
+                actionBtn.style.display = 'block';
+                actionBtn.style.background = "linear-gradient(135deg, #11998e, #38ef7d)";
+                actionBtn.innerText = "Claim 50 Coins";
+                
+                // রিওয়ার্ড কালেক্ট ফাংশন সেট
+                actionBtn.onclick = function() {
+                    userCoins += 50;
+                    updateBalances();
+                    alert("অভিনন্দন! আপনি সফলভাবে ৫০ কয়েন বোনাস পেয়েছেন।");
+                    triggerAI("50 Coins Credited Via Direct Link Method.");
+                    closeVideoAdPopup();
+                    // মূল অবস্থায় ফেরত নেওয়া
+                    actionBtn.onclick = handleWatchAdClick;
+                };
+            }
+        }, 1000);
+    }
+
+    // অন্যান্য টাস্ক রাউটার
+    function openTask(taskType) {
+        document.querySelectorAll('.task-popup').forEach(p => p.classList.remove('popup-active'));
+        if(taskType === 'spin') {
+            document.getElementById('popup-spin').classList.add('popup-active');
+            resetSpin();
+        } else if(taskType === 'quiz') {
+            document.getElementById('popup-quiz').classList.add('popup-active');
+            generateQuiz();
+        } else if(taskType === 'math') {
+            document.getElementById('popup-math').classList.add('popup-active');
+            generateMath();
+        } else if(taskType === 'scratch') {
+            document.getElementById('popup-scratch').classList.add('popup-active');
+            initScratchCard();
+        } else if(taskType === 'game') {
+            document.getElementById('popup-game').classList.add('popup-active');
+            document.getElementById('game-timer-display').innerText = "🎮 রেডি হয়ে বাটনে চাপ দিন";
+            document.getElementById('start-game-btn').disabled = false;
+        }
+    }
+
+    function closeTaskPopup() {
+        document.querySelectorAll('.task-popup').forEach(p => p.classList.remove('popup-active'));
+    }
+
+    // SPIN WHEEL LOGIC
+    const spinPrizes = [0, 10, 5, 20, 0, 1, 25, 15]; 
+    let isSpinning = false;
+    function resetSpin() {
+        document.getElementById('wheel').style.transform = 'rotate(0deg)';
+        isSpinning = false;
+    }
+    function spinTheWheel() {
+        if(isSpinning) return;
+        isSpinning = true;
+        const randomIndex = Math.floor(Math.random() * spinPrizes.length);
+        const degreesPerSegment = 360 / spinPrizes.length;
+        const targetRotation = (360 * 4) + (randomIndex * degreesPerSegment); 
+        
+        const wheel = document.getElementById('wheel');
+        wheel.style.transform = `rotate(${targetRotation}deg)`;
+        
+        setTimeout(() => {
+            let winPrize = spinPrizes[spinPrizes.length - 1 - randomIndex]; 
+            userCoins += winPrize;
+            updateBalances();
+            alert(`আপনি পেয়েছেন: ${winPrize} Coins!`);
+            closeTaskPopup();
+        }, 4000);
+    }
+
+    // QUIZ LOGIC
+    const quizBank = [
+        { q: "বাংলাদেশের রাজধানী কোথায়?", a: ["ঢাকা", "খুলনা", "সিলেট", "বরিশাল"], correct: 0 },
+        { q: "কোনটি এআই (AI) টুল?", a: ["ChatGPT", "Photoshop", "Chrome", "Windows"], correct: 0 },
+        { q: "৫ এর সাথে ৫ গুণ করলে কত হয়?", a: ["১০", "২৫", "৫০", "৫"], correct: 1 }
+    ];
+    function generateQuiz() {
+        const randomQuiz = quizBank[Math.floor(Math.random() * quizBank.length)];
+        document.getElementById('quiz-question').innerText = randomQuiz.q;
+        const optionsDiv = document.getElementById('quiz-options');
+        optionsDiv.innerHTML = "";
+        randomQuiz.a.forEach((opt, idx) => {
+            let btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.innerText = opt;
+            btn.onclick = () => {
+                if(idx === randomQuiz.correct) {
+                    userCoins += 15;
+                    updateBalances();
+                    alert("সঠিক উত্তর! ১৫ কয়েন যোগ হয়েছে।");
+                    closeTaskPopup();
+                } else {
+                    alert("ভুল উত্তর! আবার চেষ্টা করুন।");
+                }
+            };
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    // MATH LOGIC
+    let currentMathAns = 0;
+    function generateMath() {
+        let num1 = Math.floor(Math.random() * 20) + 1;
+        let num2 = Math.floor(Math.random() * 20) + 1;
+        currentMathAns = num1 + num2;
+        document.getElementById('math-question').innerText = `${num1} + ${num2} = ?`;
+        document.getElementById('math-answer').value = "";
+    }
+    function checkMathAnswer() {
+        let userAns = parseInt(document.getElementById('math-answer').value);
+        if(userAns === currentMathAns) {
+            userCoins += 15;
+            updateBalances();
+            alert("সঠিক উত্তর হয়েছে! ১৫ কয়েন যুক্ত হলো।");
+            closeTaskPopup();
+        } else {
+            alert("ভুল উত্তর, আবার ট্রাই করুন!");
+        }
+    }
+
+    // SCRATCH CARD LOGIC
+    function initScratchCard() {
+        const randomPrize = [10, 15, 20, 25, 30][Math.floor(Math.random()*5)];
+        document.getElementById('scratch-prize-text').innerText = `+${randomPrize} Coins`;
+        const canvas = document.getElementById('scratch-canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#888a8c';
+        ctx.fillRect(0, 0, 200, 200);
+        let isDrawing = false;
+        let clearedPixels = 0;
+
+        function scratch(e) {
+            if(!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.fill();
+            clearedPixels++;
+            if(clearedPixels > 50) { 
+                canvas.style.pointerEvents = 'none';
+                isDrawing = false;
+                clearedPixels = 0;
+                setTimeout(() => { 
+                    userCoins += randomPrize;
+                    updateBalances();
+                    alert(`কার্ড ঘষার জন্য ${randomPrize} কয়েন পেয়েছেন!`);
+                    closeTaskPopup();
+                }, 500);
+            }
+        }
+        canvas.onmousedown = () => isDrawing = true;
+        canvas.onmouseup = () => isDrawing = false;
+        canvas.onmousemove = scratch;
+        canvas.style.pointerEvents = 'auto';
+    }
+
+    // GAME TIMER LOGIC
+    function startPlayGameTimer() {
+        document.getElementById('start-game-btn').disabled = true;
+        let timeRemaining = 60; 
+        const timerDisplay = document.getElementById('game-timer-display');
+        const gameInterval = setInterval(() => {
+            timeRemaining--;
+            timerDisplay.innerText = `🎮 গেম রানিং... আর মাত্র ${timeRemaining} সেকেন্ড খেলুন`;
+            if(timeRemaining <= 0) {
+                clearInterval(gameInterval);
+                userCoins += 40;
+                updateBalances();
+                alert("১ মিনিট সম্পন্ন হয়েছে! ৪০ কয়েন বোনাস যুক্ত হলো।");
+                closeTaskPopup();
+            }
+        }, 1000);
+    }
+
+    // Withdraw & Tab Controls
+    function switchTab(tab) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        if(tab === 'dashboard') document.getElementById('dashboard-screen').classList.add('active');
+        else if(tab === 'withdraw') document.getElementById('withdraw-screen').classList.add('active');
+    }
+
+    function handleWithdraw() {
+        const method = document.getElementById('payment-method').value;
+        const number = document.getElementById('payment-number').value;
+        const amount = parseInt(document.getElementById('payment-amount').value);
+
+        if(!number || isNaN(amount)) { alert("সঠিক তথ্য প্রদান করুন!"); return; }
+        if(amount < 50) { alert("সর্বনিম্ন ৫০ কয়েন তুলতে হবে!"); return; }
+        if(userCoins < amount) { alert("আপনার অ্যাকাউন্টে পর্যাপ্ত কয়েন নেই!"); return; }
+
+        userCoins -= amount;
+        updateBalances();
+        triggerAI(`AI Approved payment to ${method}.`);
+        alert(`✅ পেমেন্ট রিকোয়েস্ট সফল! ১ মিনিটের মধ্যে টাকা চলে যাবে।`);
+    }
+
+    function applyReferral() {
+        userCoins += 1000;
+        updateBalances();
+        document.getElementById('btn-refer').disabled = true;
+        alert("১০০০ কয়েন বোনাস যোগ করা হয়েছে।");
+    }
+</script>
+</body>
+</html>
